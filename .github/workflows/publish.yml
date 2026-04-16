@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Publish
 
 on:
   push:
@@ -31,11 +31,3 @@ jobs:
         run: vsce publish -p ${{ secrets.VSCE_PAT }}
         env:
           VSCE_TOKEN: ${{ secrets.VSCE_PAT }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./*.vsix
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
