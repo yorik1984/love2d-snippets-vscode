@@ -28,9 +28,9 @@ jobs:
         run: vsce package
 
       - name: Publish to Marketplace
-        run: vsce publish -p ${{ secrets.VSCE_TOKEN }}
+        run: vsce publish -p ${{ secrets.VSCE_PAT }}
         env:
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          VSCE_TOKEN: ${{ secrets.VSCE_PAT }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
