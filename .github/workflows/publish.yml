@@ -4,29 +4,26 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-
-      - name: Install vsce
-        run: npm install -g @vscode/vsce
-
-      - name: Package VS Code Extension
-        run: vsce package
+      - name: Get version from package.json
+        id: get_version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Publish to Marketplace
-        run: vsce publish -p ${{ secrets.VSCE_PAT }}
+        run: |
+          vsce publish -p ${{ secrets.VSCE_PAT }} --packagePath ./love2d-snippets-${{ steps.get_version.outputs.VERSION }}.vsix 2>&1 | tee output.log
+          if grep -q "already exists" output.log; then
+            echo "⚠️ Version ${{ steps.get_version.outputs.VERSION }} already exists on marketplace"
+            exit 0
+          fi
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
