@@ -1,0 +1,41 @@
+name: Build and Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Package VS Code Extension
+        run: vsce package
+
+      - name: Publish to Marketplace
+        run: vsce publish -p ${{ secrets.VSCE_TOKEN }}
+        env:
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./*.vsix
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
