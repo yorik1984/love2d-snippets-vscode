@@ -33,23 +33,13 @@ jobs:
         id: get_version
         run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          TAG="v${{ steps.get_version.outputs.VERSION }}"
-          if git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
-            echo "EXISTS=true" >> $GITHUB_OUTPUT
-          else
-            echo "EXISTS=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Release
-        if: steps.check_tag.outputs.EXISTS == 'false'
+      - name: Create or Update Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.get_version.outputs.VERSION }}
           name: Release v${{ steps.get_version.outputs.VERSION }}
           files: ./*.vsix
           generate_release_notes: true
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
