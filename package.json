@@ -1,0 +1,52 @@
+{
+	"name": "love2d-snippets",
+	"files": [
+	"assets/",
+	"snippets/",
+	"README.md",
+	"CHANGELOG.md",
+	"LICENSE"
+	],
+	"displayName": "LÖVE Snippets",
+	"description": "A comprehensive collection of code snippets for the LÖVE framework",
+	"version": "1.0.0",
+	"publisher": "yorik1984",
+	"icon": "assets/love2d-snippets-logo128.png",
+	"engines": {
+		"vscode": "^1.74.0"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yorik1984/love2d-snippets-vscode"
+	},
+	"homepage": "https://github.com/yorik1984/love2d-snippets-vscode",
+	"bugs": {
+		"url": "https://github.com/yorik1984/love2d-snippets-vscode/issues"
+	},
+	"galleryBanner": {
+		"color": "#2FA8DC",
+		"theme": "light"
+	},
+	"categories": [
+		"Snippets"
+	],
+	"keywords": [
+		"love2d",
+		"lua",
+		"game-development",
+		"snippets",
+		"love"
+	],
+	"contributes": {
+		"snippets": [
+			{ "language": "lua", "path": "./snippets/love2d/callbacks.json" },
+			{ "language": "lua", "path": "./snippets/love2d/conf.json" },
+			{ "language": "lua", "path": "./snippets/love2d/constructors.json" },
+			{ "language": "lua", "path": "./snippets/love2d/enums.json" },
+			{ "language": "lua", "path": "./snippets/love2d/functions.json" },
+			{ "language": "lua", "path": "./snippets/love2d/getters-setters.json" },
+			{ "language": "lua", "path": "./snippets/love2d/modules.json" }
+		]
+	}
+}
