@@ -9,7 +9,7 @@
 	],
 	"displayName": "LÖVE Snippets",
 	"description": "A comprehensive collection of code snippets for the LÖVE framework",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"publisher": "yorik1984",
 	"icon": "assets/love2d-snippets-logo128.png",
 	"engines": {
