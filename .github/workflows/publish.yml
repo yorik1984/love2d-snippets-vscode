@@ -24,11 +24,6 @@ jobs:
         run: npm install -g @vscode/vsce
 
       - name: Publish to Marketplace
-        run: |
-          vsce publish -p ${{ secrets.VSCE_PAT }} 2>&1 | tee output.log
-          if grep -q "already exists" output.log; then
-            echo "⚠️ Version already exists on marketplace"
-            exit 0
-          fi
+        run: vsce publish -p ${{ secrets.VSCE_PAT }} --no-update-package-json
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
