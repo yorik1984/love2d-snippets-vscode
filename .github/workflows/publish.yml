@@ -2,8 +2,9 @@ name: Publish
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    paths:
+      - 'package.json'
   workflow_dispatch:
 
 jobs:
@@ -22,15 +23,11 @@ jobs:
       - name: Install vsce
         run: npm install -g @vscode/vsce
 
-      - name: Get version from package.json
-        id: get_version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
       - name: Publish to Marketplace
         run: |
-          vsce publish -p ${{ secrets.VSCE_PAT }} --packagePath ./love2d-snippets-${{ steps.get_version.outputs.VERSION }}.vsix 2>&1 | tee output.log
+          vsce publish -p ${{ secrets.VSCE_PAT }} 2>&1 | tee output.log
           if grep -q "already exists" output.log; then
-            echo "⚠️ Version ${{ steps.get_version.outputs.VERSION }} already exists on marketplace"
+            echo "⚠️ Version already exists on marketplace"
             exit 0
           fi
         env:
