@@ -1,0 +1,48 @@
+name: Build VS Code Extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'snippets/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'snippets/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Package VS Code Extension
+        run: vsce package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: love2d-snippets-vsix
+          path: ./*.vsix
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./*.vsix
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
