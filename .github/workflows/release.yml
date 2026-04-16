@@ -6,16 +6,13 @@ on:
     paths:
       - 'package.json'
       - 'snippets/**'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'package.json'
-      - 'snippets/**'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -32,16 +29,26 @@ jobs:
       - name: Package VS Code Extension
         run: vsce package
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: love2d-snippets-vsix
-          path: ./*.vsix
+      - name: Get version from package.json
+        id: get_version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG="v${{ steps.get_version.outputs.VERSION }}"
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+            echo "EXISTS=true" >> $GITHUB_OUTPUT
+          else
+            echo "EXISTS=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.check_tag.outputs.EXISTS == 'false'
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: Release v${{ steps.get_version.outputs.VERSION }}
           files: ./*.vsix
           generate_release_notes: true
         env:
