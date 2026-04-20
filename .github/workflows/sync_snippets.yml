@@ -1,0 +1,54 @@
+name: Sync snippets from yorik1984/love2d-snippets
+
+on:
+  schedule:
+    # Runs every Monday at 00:30 UTC
+    - cron: "30 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout destination repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          repository: yorik1984/love2d-snippets
+          path: ./source
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if package.json exists
+        run: |
+          if [ ! -f package.json ]; then
+            echo "ERROR: package.json not found"
+            exit 1
+          fi
+
+      - name: Copy snippets folder
+        run: |
+          rm -rf snippets
+          cp -r ./source/snippets .
+
+      - name: Copy contributes.snippets from package.json
+        run: |
+          node -e "
+            const src = JSON.parse(require('fs').readFileSync('./source/package.json'));
+            const dst = JSON.parse(require('fs').readFileSync('./package.json'));
+            dst.contributes = dst.contributes || {};
+            dst.contributes.snippets = src.contributes.snippets;
+            require('fs').writeFileSync('./package.json', JSON.stringify(dst, null, 2));
+          "
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git add .
+          git diff --quiet && exit 0
+          git commit -m "sync: update snippets from `yorik1984/love2d-snippets` [skip ci]"
+          git push
