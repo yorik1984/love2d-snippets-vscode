@@ -1,4 +1,4 @@
-name: Sync snippets from yorik1984/love2d-snippets
+name: Sync snippets from love2d-snippets
 
 on:
   schedule:
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: yorik1984/love2d-snippets
-          path: ./source
+          path: ./temp_snippets
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if package.json exists
@@ -33,12 +33,12 @@ jobs:
       - name: Copy snippets folder
         run: |
           rm -rf snippets
-          cp -r ./source/snippets .
+          cp -r ./temp_snippets/snippets .
 
       - name: Copy contributes.snippets from package.json
         run: |
           node -e "
-            const src = JSON.parse(require('fs').readFileSync('./source/package.json'));
+            const src = JSON.parse(require('fs').readFileSync('./temp_snippets/package.json'));
             const dst = JSON.parse(require('fs').readFileSync('./package.json'));
             dst.contributes = dst.contributes || {};
             dst.contributes.snippets = src.contributes.snippets;
