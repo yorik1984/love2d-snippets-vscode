@@ -44,10 +44,101 @@ jobs:
             dst.contributes.snippets = src.contributes.snippets;
             require('fs').writeFileSync('./package.json', JSON.stringify(dst, null, 2));
           "
-          
+
+      - name: Merge changelog entries
+        run: |
+          node -e "
+            const fs = require('fs');
+
+            // Read source changelog
+            const sourceChangelog = fs.readFileSync('./temp_snippets/CHANGELOG.md', 'utf8');
+
+            // Read destination changelog (if exists)
+            let destChangelog = '';
+            let destVersions = new Set();
+
+            if (fs.existsSync('./CHANGELOG.md')) {
+              destChangelog = fs.readFileSync('./CHANGELOG.md', 'utf8');
+              // Extract existing version numbers from destination
+              const versionRegex = /^## \[(\d+\.\d+\.\d+)\]/gm;
+              let match;
+              while ((match = versionRegex.exec(destChangelog)) !== null) {
+                destVersions.add(match[1]);
+              }
+            } else {
+              // If no CHANGELOG.md exists, use a template
+              destChangelog = `# Changelog
+
+              All notable changes to this project will be documented in this file.
+
+              The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+              and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+              `;
+              }
+
+              // Extract new versions from source (versions not in destination)
+              const sourceVersionRegex = /(^## \[(\d+\.\d+\.\d+)\][\s\S]+?)(?=^## \[|\n*$)/gm;
+              let newEntries = [];
+              let srcMatch;
+
+              while ((srcMatch = sourceVersionRegex.exec(sourceChangelog)) !== null) {
+              const fullEntry = srcMatch[1];
+              const version = srcMatch[2];
+              if (!destVersions.has(version)) {
+                newEntries.push({ version, fullEntry });
+              }
+            }
+
+            // If no new entries, exit
+            if (newEntries.length === 0) {
+              console.log('No new changelog entries to add');
+              process.exit(0);
+            }
+
+            // Sort new entries by version (newest first)
+            newEntries.sort((a, b) => {
+              const aParts = a.version.split('.').map(Number);
+              const bParts = b.version.split('.').map(Number);
+              for (let i = 0; i < 3; i++) {
+                if (aParts[i] !== bParts[i]) return bParts[i] - aParts[i];
+              }
+              return 0;
+            });
+
+            // Find the position after the header (first ## version or end of header)
+            const headerEndMatch = destChangelog.match(/^.*?(?=\n## \[|\n*$)/s);
+            const headerEnd = headerEndMatch ? headerEndMatch[0].length : 0;
+
+            // Build new changelog: header + new entries + old content (starting from first version)
+            let newChangelog = destChangelog.substring(0, headerEnd);
+
+            // Add new entries
+            for (const entry of newEntries) {
+              newChangelog += '\n' + entry.fullEntry;
+            }
+
+            // Find where versions start in old content
+            const firstVersionMatch = destChangelog.substring(headerEnd).match(/^## \[\d+\.\d+\.\d+\]/m);
+            if (firstVersionMatch) {
+              const oldContentStart = headerEnd + firstVersionMatch.index;
+              newChangelog += destChangelog.substring(oldContentStart);
+            } else {
+              // If no versions in destination, just append nothing (or maybe there's nothing)
+            }
+
+            // Clean up extra newlines
+            newChangelog = newChangelog.replace(/\n{3,}/g, '\n\n');
+
+            // Write the merged changelog
+            fs.writeFileSync('./CHANGELOG.md', newChangelog);
+            console.log('Added ' + newEntries.length + ' new changelog entries:');
+            newEntries.forEach(e => console.log('  - ' + e.version));
+          "
+
       - name: Remove temp_snippets folder
         run: rm -rf temp_snippets
-        
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
