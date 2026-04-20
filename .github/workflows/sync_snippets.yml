@@ -44,7 +44,10 @@ jobs:
             dst.contributes.snippets = src.contributes.snippets;
             require('fs').writeFileSync('./package.json', JSON.stringify(dst, null, 2));
           "
-
+          
+      - name: Remove temp_snippets folder
+        run: rm -rf temp_snippets
+        
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
