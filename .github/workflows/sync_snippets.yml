@@ -139,7 +139,7 @@ jobs:
           git add .
           git status
           git commit -m "sync: update snippets from `yorik1984/love2d-snippets` [skip ci]"
-          git diff --quiet && exit 0
+          git diff --cached --quiet && exit 0
           git push -v
           git log -1 --stat
           
