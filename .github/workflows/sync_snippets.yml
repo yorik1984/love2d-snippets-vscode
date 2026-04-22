@@ -125,9 +125,6 @@ jobs:
             newEntries.forEach(e => console.log('  - ' + e.version));
           "
 
-      - name: Remove temp_snippets folder
-        run: rm -rf temp_snippets
-
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
@@ -135,3 +132,6 @@ jobs:
           git diff --quiet && exit 0
           git commit -m "sync: update snippets from `yorik1984/love2d-snippets` [skip ci]"
           git push
+          
+      - name: Remove temp_snippets folder
+        run: rm -rf temp_snippets
