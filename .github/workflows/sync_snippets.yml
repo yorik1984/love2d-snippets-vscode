@@ -138,8 +138,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git add .
           git status
-          git diff --quiet && exit 0
           git commit -m "sync: update snippets from `yorik1984/love2d-snippets` [skip ci]"
+          git diff --quiet && exit 0
           git push -v
           git log -1 --stat
           
