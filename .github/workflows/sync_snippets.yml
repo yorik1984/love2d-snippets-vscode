@@ -33,7 +33,7 @@ jobs:
       - name: Copy snippets folder
         run: |
           rm -rf snippets
-          cp -r ./temp_snippets/snippets .
+          cp -r ./temp_snippets/snippets snippets
 
       - name: Copy contributes.snippets from package.json
         run: |
