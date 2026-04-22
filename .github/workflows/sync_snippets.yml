@@ -134,6 +134,6 @@ jobs:
           git commit -m "sync: update snippets from `yorik1984/love2d-snippets` [skip ci]"
           git push -v
           git log -1 --stat
-          
+
       - name: Remove temp_snippets folder
         run: rm -rf temp_snippets
