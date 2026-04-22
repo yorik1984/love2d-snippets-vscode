@@ -124,14 +124,7 @@ jobs:
             console.log('Added ' + newEntries.length + ' new changelog entries:');
             newEntries.forEach(e => console.log('  - ' + e.version));
           "
-          
-      - name: Debug
-        run: |
-          ls -la
-          ls -la ./temp_snippets/
-          ls -la ./temp_snippets/snippets/
-          pwd
-          
+
       - name: Commit and push
         run: |
           set -x
@@ -139,7 +132,6 @@ jobs:
           git add .
           git status
           git commit -m "sync: update snippets from `yorik1984/love2d-snippets` [skip ci]"
-          git diff --cached --quiet && exit 0
           git push -v
           git log -1 --stat
           
