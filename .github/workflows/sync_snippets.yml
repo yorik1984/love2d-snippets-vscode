@@ -44,83 +44,133 @@ jobs:
       - name: Merge changelog entries
         run: |
           node -e "
-            const fs = require('fs');
+            import { readFileSync, existsSync, writeFileSync } from 'fs';
 
             // Read source changelog
-            const sourceChangelog = fs.readFileSync('./temp_snippets/CHANGELOG.md', 'utf8');
+            let sourceChangelog = readFileSync('./temp_snippets/CHANGELOG.md', 'utf8');
 
             // Read destination changelog (if exists)
             let destChangelog = '';
             let destVersions = new Set();
 
-            if (fs.existsSync('./CHANGELOG.md')) {
-              destChangelog = fs.readFileSync('./CHANGELOG.md', 'utf8');
-              // Extract existing version numbers from destination
-              const versionRegex = /^## \[(\d+\.\d+\.\d+)\]/gm;
-              let match;
-              while ((match = versionRegex.exec(destChangelog)) !== null) {
-                destVersions.add(match[1]);
-              }
-              } else {
-                // If no CHANGELOG.md exists, use a template (single line)
+            if (existsSync('./CHANGELOG.md')) {
+                destChangelog = readFileSync('./CHANGELOG.md', 'utf8');
+                // Extract existing version numbers from destination
+                let versionRegex = /^## \[(\d+\.\d+\.\d+)\]/gm;
+                let match;
+                while ((match = versionRegex.exec(destChangelog)) !== null) {
+                    destVersions.add(match[1]);
+                }
+            } else {
+                // If no CHANGELOG.md exists, use a template
                 destChangelog = '# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n';
-              }
-
-              // Extract new versions from source (versions not in destination)
-              const sourceVersionRegex = /(^## \[(\d+\.\d+\.\d+)\][\s\S]+?)(?=^## \[|\n*$)/gm;
-              let newEntries = [];
-              let srcMatch;
-
-              while ((srcMatch = sourceVersionRegex.exec(sourceChangelog)) !== null) {
-              const fullEntry = srcMatch[1];
-              const version = srcMatch[2];
-              if (!destVersions.has(version)) {
-                newEntries.push({ version, fullEntry });
-              }
             }
+
+            // Extract ALL versions from source with their FULL content
+            function extractVersions(content) {
+                let versions = [];
+                let lines = content.split('\n');
+                let i = 0;
+
+                while (i < lines.length) {
+                    // Find a version header
+                    let headerMatch = lines[i].match(/^## \[(\d+\.\d+\.\d+)\]/);
+                    if (headerMatch) {
+                        let version = headerMatch[1];
+                        let entryLines = [lines[i]];
+                        i++;
+
+                        // Collect all lines until next version header or end of file
+                        while (i < lines.length && !lines[i].match(/^## \[\d+\.\d+\.\d+\]/)) {
+                            entryLines.push(lines[i]);
+                            i++;
+                        }
+
+                        versions.push({
+                            version: version,
+                            fullEntry: entryLines.join('\n')
+                        });
+                    } else {
+                        i++;
+                    }
+                }
+
+                return versions;
+            }
+
+            // Extract versions from source
+            let sourceVersions = extractVersions(sourceChangelog);
+
+            // Filter new versions (not in destination)
+            let newEntries = sourceVersions.filter(entry => !destVersions.has(entry.version));
 
             // If no new entries, exit
             if (newEntries.length === 0) {
-              console.log('No new changelog entries to add');
-              process.exit(0);
+                console.log('No new changelog entries to add');
+                process.exit(0);
             }
 
             // Sort new entries by version (newest first)
             newEntries.sort((a, b) => {
-              const aParts = a.version.split('.').map(Number);
-              const bParts = b.version.split('.').map(Number);
-              for (let i = 0; i < 3; i++) {
-                if (aParts[i] !== bParts[i]) return bParts[i] - aParts[i];
-              }
-              return 0;
+                let aParts = a.version.split('.').map(Number);
+                let bParts = b.version.split('.').map(Number);
+                for (let i = 0; i < 3; i++) {
+                    if (aParts[i] !== bParts[i]) return bParts[i] - aParts[i];
+                }
+                return 0;
             });
 
-            // Find the position after the header (first ## version or end of header)
-            const headerEndMatch = destChangelog.match(/^.*?(?=\n## \[|\n*$)/s);
-            const headerEnd = headerEndMatch ? headerEndMatch[0].length : 0;
+            // Split destination changelog into header and versions
+            function splitChangelog(content) {
+                let lines = content.split('\n');
+                let headerEndIndex = 0;
 
-            // Build new changelog: header + new entries + old content (starting from first version)
-            let newChangelog = destChangelog.substring(0, headerEnd);
+                // Find first version header
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].match(/^## \[\d+\.\d+\.\d+\]/)) {
+                        headerEndIndex = i;
+                        break;
+                    }
+                }
 
-            // Add new entries
-            for (const entry of newEntries) {
-              newChangelog += '\n' + entry.fullEntry;
+                // If no versions found, everything is header
+                if (headerEndIndex === 0 && !lines[0].match(/^## \[/)) {
+                    headerEndIndex = lines.length;
+                }
+
+                let header = lines.slice(0, headerEndIndex).join('\n');
+                let existingVersions = lines.slice(headerEndIndex).join('\n');
+
+                return { header, existingVersions };
             }
 
-            // Find where versions start in old content
-            const firstVersionMatch = destChangelog.substring(headerEnd).match(/^## \[\d+\.\d+\.\d+\]/m);
-            if (firstVersionMatch) {
-              const oldContentStart = headerEnd + firstVersionMatch.index;
-              newChangelog += destChangelog.substring(oldContentStart);
-            } else {
-              // If no versions in destination, just append nothing (or maybe there's nothing)
+            let { header, existingVersions } = splitChangelog(destChangelog);
+
+            // Build new changelog: header + new entries + existing versions
+            let newChangelog = header;
+
+            // Add each new entry with proper spacing (including blank line before header)
+            for (let entry of newEntries) {
+                // Add a blank line before the version header
+                newChangelog += '\n\n' + entry.fullEntry;
             }
 
-            // Clean up extra newlines
+            // Add existing versions if they exist
+            if (existingVersions.trim()) {
+                // Ensure proper spacing before existing versions
+                newChangelog += '\n\n' + existingVersions;
+            }
+
+            // Clean up excessive newlines (more than 2 becomes 2)
             newChangelog = newChangelog.replace(/\n{3,}/g, '\n\n');
 
+            // Ensure final newline
+            if (!newChangelog.endsWith('\n')) {
+                newChangelog += '\n';
+            }
+
             // Write the merged changelog
-            fs.writeFileSync('./CHANGELOG.md', newChangelog);
+            writeFileSync('./CHANGELOG.md', newChangelog);
             console.log('Added ' + newEntries.length + ' new changelog entries:');
             newEntries.forEach(e => console.log('  - ' + e.version));
           "
