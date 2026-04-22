@@ -124,7 +124,14 @@ jobs:
             console.log('Added ' + newEntries.length + ' new changelog entries:');
             newEntries.forEach(e => console.log('  - ' + e.version));
           "
-
+          
+      - name: Debug
+        run: |
+          ls -la
+          ls -la ./temp_snippets/
+          ls -la ./temp_snippets/snippets/
+          pwd
+          
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
