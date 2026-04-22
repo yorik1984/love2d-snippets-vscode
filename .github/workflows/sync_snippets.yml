@@ -16,12 +16,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout source repo
-        uses: actions/checkout@v4
-        with:
-          repository: yorik1984/love2d-snippets
-          path: ./temp_snippets
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Clone source repo
+        run: git clone https://github.com/yorik1984/love2d-snippets.git ./temp_snippets
 
       - name: Check if package.json exists
         run: |
