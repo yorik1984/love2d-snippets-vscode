@@ -105,8 +105,8 @@ MIT License
   <sub>
     Built with ♡ for the LÖVE community
     <br>
-    <a href="https://github.com/yorik1984/love2d-snippets-vscode/issues">Report Issue</a>·
-    <a href="https://github.com/yorik1984/love2d-snippets-vscode/discussions">Discussion</a>·
+    <a href="https://github.com/yorik1984/love2d-snippets-vscode/issues">Report Issue</a> • 
+    <a href="https://github.com/yorik1984/love2d-snippets-vscode/discussions">Discussion</a> • 
     <a href="https://love2d.org/">LÖVE</a>
   </sub>
 </div>
